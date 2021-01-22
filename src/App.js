@@ -1,7 +1,10 @@
 import './App.css';
 import { Component } from 'react';
+import { connect } from 'react-redux';
 import Form from './components/Form';
 import TodoList from './components/TodoList';
+
+import { addTodos, changeFilter } from './store/actions/quizActions';
 
 class App extends Component {
   state = {
@@ -14,13 +17,13 @@ class App extends Component {
     this.setInputValue(value);
   }
 
-  setInputValue = value => {
+  setInputValue = (value) => {
     this.setState({
       todoInputText: value,
     });
   }
 
-  submitTodoHanlder = e => {
+  submitTodoHanlder = (e) => {
     e.preventDefault();
     const { todoInputText } = this.state;
 
@@ -39,16 +42,16 @@ class App extends Component {
     }
   }
 
-  todoDelete = id => {
-    const { todos } = this.state;
+  todoDelete = (id) => {
+    const { todos } = this.props;
 
     const newTodoList = todos.filter(item => item.id !== id);
     
-    this.setState({ todos: newTodoList });
+    this.props.addTodos(newTodoList);
   }
 
-  todoComplete = id => {
-    const { todos } = this.state;
+  todoComplete = (id) => {
+    const { todos } = this.props;
 
     const newTodoList = todos.map(item => {
       if (item.id === id) {
@@ -59,84 +62,79 @@ class App extends Component {
       return item;
     });
 
-    this.setState({ todos: newTodoList });
+    this.props.addTodos(newTodoList);
   }
 
-  addTodo = todoText => {
-    if (!todoText.trim().length) return ;
-    const { todos } = this.state;
+  addTodo = (todoText) => {
+    if (!todoText.trim().length) return;
+    const { todos } = this.props;
+
     const todo = {
       text: todoText,
       id: Date.now(),
       date: new Date(),
       completed: false,
       isShow: true,
-    }
+    };
     
     todos.push(todo);
     
     this.setState({
-      todos,
       todoInputText: '', 
     });
+
+    this.props.addTodos(todos);
   }
 
   changeSelectHandler = ({ target: { value } }) => {
-    this.setState({
-      todoFilter: value,
-    }, () => {
-      this.todoFilter();
-    });
-
+    this.props.changeFilter(value);
+    setTimeout(() => this.todoFilter(), 0);
   }
 
   todoFilter = () => {
-    const { todoFilter, todos } = this.state;
+    const { todoFilter, todos } = this.props;
 
     switch (todoFilter) {
       case 'completed':
-        this.setState({ todos: todos.map(todo => {
-          if (todo.completed) {
-            todo.isShow = true
-          } else {
-            todo.isShow = false
-          }
+        const newTodoCompletedList = todos.map((todo) => {
+          todo.completed ? todo.isShow = true : todo.isShow = false;
           return todo;
-        }) })
+        });
+
+        this.props.addTodos(newTodoCompletedList);
         break;
+
       case 'uncompleted':
-        this.setState({ todos: todos.map(todo => {
-          if (!todo.completed) {
-            todo.isShow = true
-          } else {
-            todo.isShow = false;
-          }
+        const newTodoUncompletedList = todos.map((todo) => {
+          !todo.completed ? todo.isShow = true : todo.isShow = false;
           return todo;
-        }) })
+        });
+
+        this.props.addTodos(newTodoUncompletedList);
         break;
+
       default:
-        this.setState({ todos: todos.map(todo => {
+        const defaultTodoList = todos.map((todo) => {
           todo.isShow = true;
           return todo;
-        }) })
+        });
+
+        this.props.addTodos(defaultTodoList);
     }
   }
 
   addTodosToLocalStorage = () => {
-    const { todos } = this.state;
+    const { todos } = this.props;
 
     localStorage.setItem('todos', JSON.stringify(todos));
   }
 
   getTodosFromLocalStorage = () => {
     if (localStorage.getItem('todos')) {
-      this.setState({
-        todos: JSON.parse(localStorage.getItem('todos')),
-      });
+      this.props.addTodos(JSON.parse(localStorage.getItem('todos')));
     }
   }
 
-  // Run once when the app start
   componentDidMount = () => {
     this.getTodosFromLocalStorage();
   }
@@ -146,18 +144,32 @@ class App extends Component {
   }
 
   render() {
-    const { todos, todoInputText, todoFilter } = this.state;
+    const { todoInputText } = this.state;
 
     return (
       <div className="App">
         <header>
           <h1>Todo List</h1>
         </header>
-        <Form todoFilterValue={todoFilter} inputText={todoInputText} onTodoSubmit={this.submitTodoHanlder} onSelectChange={this.changeSelectHandler} onInputChangeHandler={this.inputTextHandler} />
-        <TodoList onTodoActionsHandler={this.todoActionsHandler} todos={todos} />
+        <Form todoFilterValue={this.props.todoFilter} inputText={todoInputText} onTodoSubmit={this.submitTodoHanlder} onSelectChange={this.changeSelectHandler} onInputChangeHandler={this.inputTextHandler} />
+        <TodoList onTodoActionsHandler={this.todoActionsHandler} todos={this.props.todos} />
       </div>
     );
   }
 }
 
-export default App;
+const mapStateToProps = ({ quizReducer }) => {
+  return {
+    todos: quizReducer.todos,
+    todoFilter: quizReducer.todoFilter,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    addTodos: (todos) => dispatch(addTodos(todos)),
+    changeFilter: (filterParam) => dispatch(changeFilter(filterParam)),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
