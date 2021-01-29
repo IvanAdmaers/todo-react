@@ -1,175 +1,91 @@
 import './App.css';
 import { Component } from 'react';
 import { connect } from 'react-redux';
-import Form from './components/Form';
-import TodoList from './components/TodoList';
+import { Helmet } from 'react-helmet';
+import Form from './components/Form/Form';
+import TodoList from './components/TodoList/TodoList';
+import TasksAmount from './components/TasksAmount/TasksAmount';
+import Quote from './components/Quote/Quote';
 
-import { addTodos, changeFilter } from './store/actions/quizActions';
+// Action creators
+import { addTask, competeTask, removeTask } from './store/actions/quizActions';
+import { changeFilter } from './store/actions/filterActions';
+import { getQuote } from './store/actions/quoteActions';
 
 class App extends Component {
   state = {
-    todos: [],
-    todoFilter: 'all',
     todoInputText: '',
   };
 
-  inputTextHandler = ({ target: { value } }) => {
-    this.setInputValue(value);
+  inputChangeHandler = ({ target: { value } }) => {
+    this.setState({ todoInputText: value });
   }
 
-  setInputValue = (value) => {
-    this.setState({
-      todoInputText: value,
-    });
-  }
-
-  submitTodoHanlder = (e) => {
+  formSubmitHandler = (e) => {
     e.preventDefault();
     const { todoInputText } = this.state;
+    const { addTask } = this.props;
 
-    this.addTodo(todoInputText);
-  }
-
-  todoActionsHandler = ({ target }) => {
-    const className = target.className;
-    const parent = target.parentNode.parentNode;
-    const parentId = +parent.dataset.id;
-
-    if (className === 'trash-btn') {
-      this.todoDelete(parentId);
-    } else if (className === 'complete-btn') {
-      this.todoComplete(parentId);
-    }
-  }
-
-  todoDelete = (id) => {
-    const { todos } = this.props;
-
-    const newTodoList = todos.filter(item => item.id !== id);
+    if (!todoInputText || todoInputText.length <= 1) return;
     
-    this.props.addTodos(newTodoList);
+    addTask(Date.now(), todoInputText, false);
+
+    this.setState({ todoInputText: '' });
   }
 
-  todoComplete = (id) => {
-    const { todos } = this.props;
-
-    const newTodoList = todos.map(item => {
-      if (item.id === id) {
-        return {
-          ...item, completed: !item.completed
-        }
-      }
-      return item;
-    });
-
-    this.props.addTodos(newTodoList);
-  }
-
-  addTodo = (todoText) => {
-    if (!todoText.trim().length) return;
-    const { todos } = this.props;
-
-    const todo = {
-      text: todoText,
-      id: Date.now(),
-      date: new Date(),
-      completed: false,
-      isShow: true,
-    };
-    
-    todos.push(todo);
-    
-    this.setState({
-      todoInputText: '', 
-    });
-
-    this.props.addTodos(todos);
-  }
-
-  changeSelectHandler = ({ target: { value } }) => {
-    this.props.changeFilter(value);
-    setTimeout(() => this.todoFilter(), 0);
-  }
-
-  todoFilter = () => {
-    const { todoFilter, todos } = this.props;
-
-    switch (todoFilter) {
+  filterTasks = (tasks, activeFilter) => {
+    switch (activeFilter) {
       case 'completed':
-        const newTodoCompletedList = todos.map((todo) => {
-          todo.completed ? todo.isShow = true : todo.isShow = false;
-          return todo;
-        });
-
-        this.props.addTodos(newTodoCompletedList);
-        break;
+        return tasks.filter(task => task.isCompleted);
 
       case 'uncompleted':
-        const newTodoUncompletedList = todos.map((todo) => {
-          !todo.completed ? todo.isShow = true : todo.isShow = false;
-          return todo;
-        });
-
-        this.props.addTodos(newTodoUncompletedList);
-        break;
+        return tasks.filter(task => !task.isCompleted);
 
       default:
-        const defaultTodoList = todos.map((todo) => {
-          todo.isShow = true;
-          return todo;
-        });
-
-        this.props.addTodos(defaultTodoList);
+        return tasks;
     }
   }
 
-  addTodosToLocalStorage = () => {
-    const { todos } = this.props;
+  getUncompletedTasksAmount = (tasks) => tasks.filter(task => !task.isCompleted).length;
+  getCompletedTasksAmount = (tasks) => tasks.filter(task => task.isCompleted).length;
 
-    localStorage.setItem('todos', JSON.stringify(todos));
-  }
+  componentDidMount() {
+    const { getQuote } = this.props;
 
-  getTodosFromLocalStorage = () => {
-    if (localStorage.getItem('todos')) {
-      this.props.addTodos(JSON.parse(localStorage.getItem('todos')));
-    }
-  }
-
-  componentDidMount = () => {
-    this.getTodosFromLocalStorage();
-  }
-
-  componentDidUpdate = () => {
-    this.addTodosToLocalStorage();
+    getQuote();
   }
 
   render() {
     const { todoInputText } = this.state;
+    const { todos, competeTask, removeTask, filter, changeFilter, quote: { quoteText, quoteAuthor } } = this.props;
+    const filterTasks = this.filterTasks(todos, filter);
 
     return (
+      <>
+      <Helmet>
+        <title>Todo List</title>
+        <meta name="description" content="This is your todo list" />
+      </Helmet>
       <div className="App">
         <header>
           <h1>Todo List</h1>
         </header>
-        <Form todoFilterValue={this.props.todoFilter} inputText={todoInputText} onTodoSubmit={this.submitTodoHanlder} onSelectChange={this.changeSelectHandler} onInputChangeHandler={this.inputTextHandler} />
-        <TodoList onTodoActionsHandler={this.todoActionsHandler} todos={this.props.todos} />
+        <Form inputText={todoInputText} onInputChangeHandler={this.inputChangeHandler} onFormSubmit={this.formSubmitHandler} activeFilter={filter} onFilterChange={changeFilter}  />
+        <TodoList todos={filterTasks} onCompeteTask={competeTask} onRemoveTask={removeTask} />
+        <TasksAmount unCompletedTasksAmount={this.getUncompletedTasksAmount(todos)} completedTasksAmount={this.getCompletedTasksAmount(todos)} />
+        {quoteText && quoteAuthor && <Quote quoteText={quoteText} quoteAuthor={quoteAuthor} />}
       </div>
+      </>
     );
   }
 }
 
-const mapStateToProps = ({ quizReducer }) => {
+const mapStateToProps = ({ tasksReducer: { todos }, filterReducer: filter, quoteReducer }) => {
   return {
-    todos: quizReducer.todos,
-    todoFilter: quizReducer.todoFilter,
+    todos,
+    filter,
+    quote: quoteReducer,
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
-  return {
-    addTodos: (todos) => dispatch(addTodos(todos)),
-    changeFilter: (filterParam) => dispatch(changeFilter(filterParam)),
-  };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(App);
+export default connect(mapStateToProps, { addTask, competeTask, removeTask, changeFilter, getQuote })(App);

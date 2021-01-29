@@ -1,15 +1,18 @@
-import { ADD_TODOS, SET_FILTER_PARAM } from './actionTypes';
+import { ADD_TASK, REMOVE_TASK, COMPLETE_TASK } from './actionTypes';
 
-export const addTodos = (todos) => {
-  return {
-    type: ADD_TODOS,
-    payload: todos,
-  };
-};
+export const addTask = (id, text, isCompleted) => ({
+  type: ADD_TASK,
+  id,
+  text,
+  isCompleted,
+});
 
-export const changeFilter = (filterParam) => {
-  return {
-    type: SET_FILTER_PARAM,
-    payload: filterParam,
-  };
-};
+export const removeTask = (id) => ({
+  type: REMOVE_TASK,
+  id,
+});
+
+export const competeTask = (id) => ({
+  type: COMPLETE_TASK,
+  id,
+});

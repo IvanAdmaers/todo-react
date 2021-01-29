@@ -1,0 +1,44 @@
+.Todo {
+  margin: 0.5rem;
+  background: #fff;
+  font-size: 1.5rem;
+  color: #000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 1s ease;
+  flex: 1;
+}
+
+.Todo-item {
+  padding: 0rem 0.5rem;
+}
+
+.Completed {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.Trash-btn,
+.Complete-btn {
+  background: #ff6f47;
+  color: #fff;
+  border: none;
+  padding: 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.Complete-btn {
+  background: rgba(11, 212, 162);
+}
+
+.Fa-trash,
+.Fa-check {
+  pointer-events: none;
+}
+
+.Fall {
+  transform: translateY(10rem) rotateZ(20deg);
+  opacity: 0;
+}

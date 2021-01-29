@@ -1,7 +1,9 @@
 import { combineReducers } from 'redux';
 
-import quizReducer from './quizReducer';
+import tasksReducer from './tasksReducer';
+import filterReducer from './filterReducer';
+import quoteReducer from './quoteReducer';
 
 export default combineReducers({
-  quizReducer,
+  tasksReducer, filterReducer, quoteReducer,
 });
