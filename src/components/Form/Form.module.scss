@@ -9,6 +9,10 @@
     font-size: 2rem;
     border: none;
     background: #fff;
+
+    &:focus, &:active {
+      outline: none;
+    }
   }
 
   button {
@@ -22,6 +26,10 @@
       color: #fff;
     }
   }
+}
+
+.Form-input {
+  display: flex;
 }
 
 .Filter-todo {
@@ -49,12 +57,28 @@
     -moz-appearance: none;
     -ms-appearance: none;
     appearance: none;
-    outline: 0;
-    box-shadow: none;
-    border: 0 !important;
-    background-image: none;
+    outline: none;
+    border: none;
+    background: #fff;
+    min-height: 53px;
     color: #ff6f47;
     cursor: pointer;
     width: 12rem;
+  }
+}
+
+@media(max-width: 559px) {
+  .Form {
+    flex-direction: column;
+  }
+
+  .Form-input {
+    justify-content: center;
+    
+    input {
+      width: 75%;
+      min-width: 200px;
+    }
+
   }
 }

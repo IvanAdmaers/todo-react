@@ -3,10 +3,12 @@ import cssClasses from './Form.module.scss';
 
 const Form = ({ inputText, onInputChangeHandler, onFormSubmit, onFilterChange, activeFilter }) => (
   <form className={cssClasses.Form} onSubmit={onFormSubmit}>
-    <input onChange={onInputChangeHandler} type="text" value={inputText} />
-    <button type="submit">
-      <i className="fas fa-plus-square"></i>
-    </button>
+    <div className={cssClasses['Form-input']}>
+      <input onChange={onInputChangeHandler} type="text" value={inputText} />
+      <button type="submit">
+        <i className="fas fa-plus-square"></i>
+      </button>
+    </div>
     <div className={cssClasses.Select}>
       <select onChange={({ target: { value } }) => onFilterChange(value)} className={cssClasses['Filter-todo']} value={activeFilter}>
         <option value="all">All</option>
